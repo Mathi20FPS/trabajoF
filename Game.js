@@ -1,107 +1,145 @@
-export default class Game extends Phaser.Scene {
+class Game extends Phaser.Scene {
   constructor() {
     super('Game');
     this.alturaMaxima = 600;
+    this.paused = false;
   }
 
   preload() {
-    this.load.image('cielo', 'assets/Tiles/cielo.jpg');
-    this.load.image('pared', 'assets/Tiles/pared.png');
-    this.load.image('fondo', 'assets/Tiles/fondo.png');
-    this.load.image('suelo', 'assets/Tiles/suelo.png');
-    this.load.image('plataforma', 'assets/Tiles/plataforma.png');
+    this.load.image('cielo', 'assets/tiles/cielo.jpg');
+    this.load.image('fondo', 'assets/tiles/fondo.png');
+    this.load.image('pared', 'assets/tiles/pared.png');
+    this.load.image('suelo', 'assets/tiles/suelo.png');
+    this.load.image('plataforma', 'assets/tiles/plataforma.png');
     this.load.tilemapTiledJSON('fondoC', 'assets/Tilemaps/Fondo C.json');
+    this.load.spritesheet('jugador', 'assets/Sprite/Caminar-32x32.png', {
+      frameWidth: 32,
+      frameHeight: 32
+    });
+
+    // UI pausa corregida
+    this.load.image('pausaUI', 'assets/Interfaz/pausa.png');
   }
 
   create() {
-    // Mapa y tilesets
-    this.map = this.make.tilemap({ key: 'fondoC' });
-    const tilesetCielo = this.map.addTilesetImage('cielo', 'cielo');
-    const tilesetFondo = this.map.addTilesetImage('fondo', 'fondo');
-    const tilesetPared = this.map.addTilesetImage('pared', 'pared');
-    const tilesetSuelo = this.map.addTilesetImage('suelo', 'suelo');
+    const map = this.make.tilemap({ key: 'fondoC' });
+    const cielo = map.addTilesetImage('cielo', 'cielo');
+    const fondo = map.addTilesetImage('fondo', 'fondo');
+    const pared = map.addTilesetImage('pared', 'pared');
+    const suelo = map.addTilesetImage('suelo', 'suelo');
 
-    this.map.createLayer('Fondo', [tilesetCielo, tilesetFondo], 0, 0);
-    const capaSuelo = this.map.createLayer('Suelo', [tilesetSuelo, tilesetPared], 0, 0);
-    capaSuelo.setCollisionByProperty({ colision: true });
+    map.createLayer('Fondo', [cielo, fondo], 0, 0);
+    const capaSuelo = map.createLayer('Suelo', [suelo, pared], 0, 0);
+    capaSuelo.setCollisionByProperty({ colled: true });
 
-    // Grupo de plataformas
     this.plataformas = this.physics.add.staticGroup();
 
-    // Jugador
-    const xInicial = this.map.widthInPixels / 2;
-    const yInicial = this.map.heightInPixels - 64;
-    this.jugador = this.add.rectangle(xInicial, yInicial, 32, 32, 0xff0000);
-    this.physics.add.existing(this.jugador);
-    this.jugador.body.setCollideWorldBounds(true);
-    this.jugador.body.setBounce(0.2);
+    const x0 = map.widthInPixels / 2;
+    const y0 = map.heightInPixels - 64;
 
-    // Plataforma base (justo debajo del jugador)
-    this.plataformas.create(xInicial, yInicial + 40, 'plataforma').refreshBody();
+    this.jugador = this.physics.add.sprite(x0, y0, 'jugador', 0)
+      .setOrigin(0.5, 1)
+      .setBounce(0.1)
+      .setCollideWorldBounds(true);
 
-    // Plataformas hacia arriba
-    this.generarPlataformas(yInicial - 100, 0);
+    this.anims.create({
+      key: 'run',
+      frames: this.anims.generateFrameNumbers('jugador', { start: 4, end: 9 }),
+      frameRate: 10,
+      repeat: -1
+    });
 
-    // Colisiones
+    this.anims.create({
+      key: 'idle',
+      frames: [{ key: 'jugador', frame: 0 }],
+      frameRate: 10
+    });
+
+    this.jugador.anims.play('idle');
+
+    this.plataformas.create(x0, y0 + 4, 'plataforma').refreshBody();
+    this.generarPlataformas(0, y0 - 100, map.widthInPixels);
+
     this.physics.add.collider(this.jugador, capaSuelo);
-    this.physics.add.overlap(this.jugador, this.plataformas, this.tocarPlataforma, null, this);
+    this.physics.add.collider(this.jugador, this.plataformas, (jugador, plataforma) => {
+      return jugador.body.velocity.y > 0 && jugador.y < plataforma.y;
+    }, null, this);
 
-    // Cámara
     this.cameras.main.startFollow(this.jugador);
-    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-    this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
     this.cursors = this.input.keyboard.createCursorKeys();
-    this.alturaMaxima = yInicial;
+    this.map = map;
+    this.alturaMaxima = y0;
+
+    // Pausa
+    this.pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this.pausaUI = this.add.image(640, 360, 'pausaUI').setVisible(false).setDepth(10);
   }
 
   update() {
-    const body = this.jugador.body;
+    if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
+      this.paused = !this.paused;
+      this.pausaUI.setVisible(this.paused);
+      if (this.paused) {
+        this.physics.pause();
+        this.jugador.anims.pause();
+      } else {
+        this.physics.resume();
+        this.jugador.anims.resume();
+      }
+    }
 
-    // Movimiento
+    if (this.paused) return;
+
+    const body = this.jugador.body;
+    const animActual = this.jugador.anims.getName();
+
     if (this.cursors.left.isDown) {
       body.setVelocityX(-160);
+      this.jugador.setFlipX(true);
+      if (animActual !== 'run') this.jugador.anims.play('run');
     } else if (this.cursors.right.isDown) {
       body.setVelocityX(160);
+      this.jugador.setFlipX(false);
+      if (animActual !== 'run') this.jugador.anims.play('run');
     } else {
       body.setVelocityX(0);
+      if (animActual !== 'idle') this.jugador.anims.play('idle');
     }
 
     if (this.cursors.up.isDown && body.blocked.down) {
       body.setVelocityY(-350);
     }
 
-    // Plataformas infinitas
     if (this.jugador.y < this.alturaMaxima - 200) {
-      this.generarPlataformas(this.alturaMaxima - 400, this.alturaMaxima - 100);
+      this.generarPlataformas(
+        this.alturaMaxima - 400,
+        this.alturaMaxima - 100,
+        this.map.widthInPixels
+      );
       this.alturaMaxima -= 300;
     }
 
-    // Reiniciar si se cae
     if (this.jugador.y > this.map.heightInPixels + 200) {
       this.scene.restart();
     }
   }
 
-  generarPlataformas(yMin, yMax) {
-    const margen = 64;
-    const ancho = this.map.widthInPixels;
+  generarPlataformas(yMin, yMax, anchoMapa) {
+    const margenX = 64;
+    const saltoMinY = 100;
+    const saltoMaxY = 160;
+    let y = yMax;
 
-    for (let y = yMax; y > yMin; y -= Phaser.Math.Between(120, 160)) {
-      const cantidad = Phaser.Math.Between(1, 2);
-      for (let i = 0; i < cantidad; i++) {
-        const x = Phaser.Math.Between(margen, ancho - margen);
-        this.plataformas.create(x, y, 'plataforma').refreshBody();
-      }
-    }
-  }
-
-  tocarPlataforma(jugador, plataforma) {
-    const body = jugador.body;
-    if (body.velocity.y > 0 && jugador.y < plataforma.y) {
-      body.y = plataforma.y - body.height;
-      body.velocity.y = 0;
-      body.blocked.down = true;
+    while (y > yMin) {
+      const x = Phaser.Math.Between(margenX, anchoMapa - margenX);
+      this.plataformas.create(x, y, 'plataforma').refreshBody();
+      y -= Phaser.Math.Between(saltoMinY, saltoMaxY);
     }
   }
 }
+
+// Export global
+window.Game = Game;

@@ -2,13 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Trabajo Final - Juego</title>
-  <!-- Phaser como script global -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <title>AstroSalto</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-  <script type="module" src="./main.js"></script>
-  <script type="module" src="./Game.js"></script>
+  <!-- Phaser desde CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+  <!-- Orden correcto: primero Game, luego Menu, luego main -->
+  <script src="Game.js"></script>
+  <script src="Menu.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
-
