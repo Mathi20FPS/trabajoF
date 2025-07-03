@@ -9,7 +9,7 @@ const config = {
       debug: false
     }
   },
-  scene: [Menu, Game] // 👈 Escena de menú primero
+  scene: [Menu, Game, Pausa, Opciones, Controles, Carga] // 👈 Escena de menú primero
 };
 
 const game = new Phaser.Game(config);

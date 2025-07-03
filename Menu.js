@@ -24,7 +24,7 @@ class Menu extends Phaser.Scene {
     // Animaciones de botones (hover y click visuales)
     this.anims.create({
       key: 'hover_play',
-      frames: this.anims.generateFrameNumbers('play', { start: 1, end: 1 }),
+      frames: this.anims.generateFrameNumbers('play', { start: 1, end: 3 }),
       frameRate: 10
     });
     this.anims.create({
@@ -35,7 +35,7 @@ class Menu extends Phaser.Scene {
 
     this.anims.create({
       key: 'hover_opciones',
-      frames: this.anims.generateFrameNumbers('opciones', { start: 1, end: 1 }),
+      frames: this.anims.generateFrameNumbers('opciones', { start: 1, end: 3 }),
       frameRate: 10
     });
     this.anims.create({
@@ -46,7 +46,7 @@ class Menu extends Phaser.Scene {
 
     this.anims.create({
       key: 'hover_salir',
-      frames: this.anims.generateFrameNumbers('salir', { start: 1, end: 1 }),
+      frames: this.anims.generateFrameNumbers('salir', { start: 1, end: 3 }),
       frameRate: 10
     });
     this.anims.create({
@@ -55,26 +55,51 @@ class Menu extends Phaser.Scene {
       frameRate: 10
     });
 
-    // Botón Play
-    const playBtn = this.add.sprite(1000, 470, 'play').setInteractive().setScale(1.5);
+    // Coordenadas base
+    const portadaCentroX = this.scale.width / 2;
+    const portadaCentroY = this.scale.height / 2;
+    const margen = 40;
+
+    // Botón Play (entre planeta azul y naranja)
+    const playBtn = this.add.sprite(810, 390, 'play').setInteractive().setScale(3);
     playBtn.play('idle_play');
     playBtn.on('pointerover', () => playBtn.play('hover_play'));
     playBtn.on('pointerout', () => playBtn.play('idle_play'));
     playBtn.on('pointerdown', () => this.scene.start('Game'));
+    playBtn.on('pointerdown', () => this.scene.start('Carga'));
 
-    // Botón Opciones
-    const opcionesBtn = this.add.sprite(250, 500, 'opciones').setInteractive().setScale(1.5);
+
+    // Botón Opciones (esquina inferior izquierda)
+    const opcionesX = portadaCentroX - (900 / 2) + margen;
+    const opcionesY = portadaCentroY + (500 / 2) - margen;
+
+    const opcionesBtn = this.add.sprite(opcionesX, opcionesY, 'opciones').setInteractive().setScale(1);
     opcionesBtn.play('idle_opciones');
     opcionesBtn.on('pointerover', () => opcionesBtn.play('hover_opciones'));
     opcionesBtn.on('pointerout', () => opcionesBtn.play('idle_opciones'));
     opcionesBtn.on('pointerdown', () => console.log('Opciones'));
+    
+    opcionesBtn.on('pointerdown', () => {
+  this.scene.start('Pausa', { desde: 'Menu' });
+});
 
-    // Botón Salir
-    const salirBtn = this.add.sprite(1180, 80, 'salir').setInteractive().setScale(1.5);
+
+
+
+    // Coordenadas calculadas dentro de la portada (esquina superior derecha)
+    
+    const salirX = portadaCentroX + (900 / 2) - margen;
+    const salirY = portadaCentroY - (500 / 2) + margen;
+
+    const salirBtn = this.add.sprite(salirX, salirY, 'salir')
+    .setInteractive()
+    .setScale(1); // Botón más grande
+
     salirBtn.play('idle_salir');
     salirBtn.on('pointerover', () => salirBtn.play('hover_salir'));
     salirBtn.on('pointerout', () => salirBtn.play('idle_salir'));
     salirBtn.on('pointerdown', () => console.log('Salir'));
+
   }
 }
 

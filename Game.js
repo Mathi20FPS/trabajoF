@@ -79,7 +79,7 @@ class Game extends Phaser.Scene {
   }
 
   update() {
-    if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
+   /* if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
       this.paused = !this.paused;
       this.pausaUI.setVisible(this.paused);
       if (this.paused) {
@@ -91,7 +91,15 @@ class Game extends Phaser.Scene {
       }
     }
 
-    if (this.paused) return;
+    if (this.paused) return;*/
+   this.input.keyboard.on('keydown-ESC', () => {
+  this.scene.launch('Pausa', { desde: 'Game' });
+  this.scene.pause();
+});
+
+
+
+
 
     const body = this.jugador.body;
     const animActual = this.jugador.anims.getName();
