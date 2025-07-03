@@ -17,7 +17,6 @@ class Game extends Phaser.Scene {
       frameHeight: 32
     });
 
-    // UI pausa corregida
     this.load.image('pausaUI', 'assets/Interfaz/pausa.png');
   }
 
@@ -41,6 +40,7 @@ class Game extends Phaser.Scene {
       .setOrigin(0.5, 1)
       .setBounce(0.1)
       .setCollideWorldBounds(true);
+    this.jugador.body.setGravityY(15);
 
     this.anims.create({
       key: 'run',
@@ -73,34 +73,16 @@ class Game extends Phaser.Scene {
     this.map = map;
     this.alturaMaxima = y0;
 
-    // Pausa
     this.pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    this.pKey.on('down', () => {
+      this.scene.launch('Pausa', { desde: 'Game' });
+      this.scene.pause();
+    });
+
     this.pausaUI = this.add.image(640, 360, 'pausaUI').setVisible(false).setDepth(10);
   }
 
   update() {
-   /* if (Phaser.Input.Keyboard.JustDown(this.pKey)) {
-      this.paused = !this.paused;
-      this.pausaUI.setVisible(this.paused);
-      if (this.paused) {
-        this.physics.pause();
-        this.jugador.anims.pause();
-      } else {
-        this.physics.resume();
-        this.jugador.anims.resume();
-      }
-    }
-
-    if (this.paused) return;*/
-   this.input.keyboard.on('keydown-ESC', () => {
-  this.scene.launch('Pausa', { desde: 'Game' });
-  this.scene.pause();
-});
-
-
-
-
-
     const body = this.jugador.body;
     const animActual = this.jugador.anims.getName();
 
@@ -121,33 +103,45 @@ class Game extends Phaser.Scene {
       body.setVelocityY(-350);
     }
 
+    // Si el jugador sube mucho, generar nuevas plataformas arriba
     if (this.jugador.y < this.alturaMaxima - 200) {
-      this.generarPlataformas(
-        this.alturaMaxima - 400,
-        this.alturaMaxima - 100,
-        this.map.widthInPixels
-      );
-      this.alturaMaxima -= 300;
+      const nuevoMinY = this.alturaMaxima - 400;
+      const nuevoMaxY = this.alturaMaxima - 100;
+      this.generarPlataformas(nuevoMinY, nuevoMaxY, this.map.widthInPixels);
+      this.alturaMaxima = nuevoMinY;
     }
 
-    if (this.jugador.y > this.map.heightInPixels + 200) {
+    // Si cae demasiado, reiniciar
+    if (this.jugador.y > this.alturaMaxima + 800) {
       this.scene.restart();
     }
   }
 
   generarPlataformas(yMin, yMax, anchoMapa) {
-    const margenX = 64;
-    const saltoMinY = 100;
-    const saltoMaxY = 160;
+    const margenLateral = 150;
+    const anchoJugable = anchoMapa - 2 * margenLateral;
+    const saltoY = 140;
+
     let y = yMax;
+    let lado = Phaser.Math.Between(0, 1); // empieza en izquierda o derecha aleatoriamente
 
     while (y > yMin) {
-      const x = Phaser.Math.Between(margenX, anchoMapa - margenX);
+      const mitad = anchoJugable / 2;
+      let x;
+
+      if (lado === 0) {
+        // lado izquierdo
+        x = margenLateral + Phaser.Math.Between(50, mitad - 50);
+      } else {
+        // lado derecho
+        x = margenLateral + mitad + Phaser.Math.Between(50, mitad - 50);
+      }
+
       this.plataformas.create(x, y, 'plataforma').refreshBody();
-      y -= Phaser.Math.Between(saltoMinY, saltoMaxY);
+      y -= saltoY;
+      lado = 1 - lado; // alternar lado
     }
   }
 }
 
-// Export global
 window.Game = Game;

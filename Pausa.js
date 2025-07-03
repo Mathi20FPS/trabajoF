@@ -4,7 +4,7 @@ class Pausa extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('opcionesUI', 'assets/Interfaz/opciones.png');
+    this.load.image('opcionesUI', 'assets/Interfaz/pausa2.png');
     this.load.spritesheet('musicaBtn', 'assets/Sprite/musica.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('sonidoBtn', 'assets/Sprite/sonido.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('controlesBtn', 'assets/Sprite/controles.png', { frameWidth: 32, frameHeight: 32 });
@@ -21,52 +21,49 @@ class Pausa extends Phaser.Scene {
     this.musicaOn = true;
     this.sonidoOn = true;
 
-    const musicaBtn = this.add.sprite(centerX - 120, centerY + 40, 'musicaBtn').setInteractive().setScale(1.5);
-    const sonidoBtn = this.add.sprite(centerX + 10, centerY + 10, 'sonidoBtn').setInteractive().setScale(1.5);
-    const controlesBtn = this.add.sprite(centerX, centerY + 100, 'controlesBtn').setInteractive().setScale(1.5);
-    const salirBtn = this.add.sprite(centerX + 150, centerY - 165, 'salirBtn').setInteractive().setScale(2);
+    // Animaciones para música y sonido (2 estados)
+    this.anims.create({ key: 'activo_musica', frames: [{ key: 'musicaBtn', frame: 0 }], frameRate: 10 });
+    this.anims.create({ key: 'inactivo_musica', frames: [{ key: 'musicaBtn', frame: 2 }], frameRate: 10 });
 
-    this.anims.create({
-      key: 'animMusica',
-      frames: this.anims.generateFrameNumbers('musicaBtn', { start: 0, end: 1 }),
-      frameRate: 2,
+    this.anims.create({ key: 'activo_sonido', frames: [{ key: 'sonidoBtn', frame: 0 }], frameRate: 10 });
+    this.anims.create({ key: 'inactivo_sonido', frames: [{ key: 'sonidoBtn', frame: 2 }], frameRate: 10 });
 
-    });
-    this.anims.create({
-      key: 'animSonido',
-      frames: this.anims.generateFrameNumbers('sonidoBtn', { start: 0, end: 1 }),
-      frameRate: 2,
-    });
-    this.anims.create({
-      key: 'animControles',
-      frames: this.anims.generateFrameNumbers('controlesBtn', { start: 0, end: 1 }),
-      frameRate: 2,
-    });
-    this.anims.create({
-      key: 'animSalir',
-      frames: this.anims.generateFrameNumbers('salirBtn', { start: 0, end: 1 }),
-      frameRate: 2,
-    });
+    // Animaciones controles y salir con hover
+    this.anims.create({ key: 'idle_controles', frames: [{ key: 'controlesBtn', frame: 0 }], frameRate: 10 });
+    this.anims.create({ key: 'hover_controles', frames: [{ key: 'controlesBtn', frame: 2 }], frameRate: 10 });
 
-    musicaBtn.play('animMusica');
-    sonidoBtn.play('animSonido');
-    controlesBtn.play('animControles');
-    salirBtn.play('animSalir');
+    this.anims.create({ key: 'idle_salir', frames: [{ key: 'salirBtn', frame: 0 }], frameRate: 10 });
+    this.anims.create({ key: 'hover_salir', frames: [{ key: 'salirBtn', frame: 2 }], frameRate: 10 });
 
+    const musicaBtn = this.add.sprite(centerX - 90, centerY + 100, 'musicaBtn').setInteractive().setScale(1.5);
+    musicaBtn.play('activo_musica');
     musicaBtn.on('pointerdown', () => {
       this.musicaOn = !this.musicaOn;
-      musicaBtn.setFrame(this.musicaOn ? 0 : 1);
+      musicaBtn.play(this.musicaOn ? 'activo_musica' : 'inactivo_musica');
+      console.log(`Música ${this.musicaOn ? 'activada' : 'desactivada'}`);
     });
 
+    const sonidoBtn = this.add.sprite(centerX + 100, centerY + 100, 'sonidoBtn').setInteractive().setScale(1.5);
+    sonidoBtn.play('activo_sonido');
     sonidoBtn.on('pointerdown', () => {
       this.sonidoOn = !this.sonidoOn;
-      sonidoBtn.setFrame(this.sonidoOn ? 0 : 1);
+      sonidoBtn.play(this.sonidoOn ? 'activo_sonido' : 'inactivo_sonido');
+      console.log(`Sonido ${this.sonidoOn ? 'activado' : 'desactivado'}`);
     });
 
+    const controlesBtn = this.add.sprite(centerX, centerY - 50, 'controlesBtn').setInteractive().setScale(1.5);
+    controlesBtn.play('idle_controles');
+    controlesBtn.on('pointerover', () => controlesBtn.play('hover_controles'));
+    controlesBtn.on('pointerout', () => controlesBtn.play('idle_controles'));
     controlesBtn.on('pointerdown', () => {
-      this.scene.start('Controles');
+      this.scene.stop();
+      this.scene.launch('Controles', { desde: 'Pausa' });
     });
 
+    const salirBtn = this.add.sprite(centerX + 169, centerY - 180, 'salirBtn').setInteractive().setScale(2);
+    salirBtn.play('idle_salir');
+    salirBtn.on('pointerover', () => salirBtn.play('hover_salir'));
+    salirBtn.on('pointerout', () => salirBtn.play('idle_salir'));
     salirBtn.on('pointerdown', () => {
       this.scene.resume('Game');
       this.scene.stop();
@@ -76,12 +73,6 @@ class Pausa extends Phaser.Scene {
       this.scene.resume('Game');
       this.scene.stop();
     });
-    
-    controlesBtn.on('pointerdown', () => {
-    this.scene.pause();
-    this.scene.launch('Controles', { desde: 'Pausa' });
-    });
-
   }
 }
 

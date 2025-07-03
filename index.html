@@ -1,33 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>AstroSalto</title>
+  <meta charset="UTF-8">
+  <title>Mi Juego Phaser</title>
   <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #000; /* o #0d0d1a si querés un azul oscuro */
-  }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
 
-  canvas {
-    display: block;
-  }
-</style>
+    #game-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+    }
 
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <!-- Phaser desde CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <div id="game-container"></div>
 
-  <!-- Orden correcto: primero Game, luego Menu, luego main -->
-   <script src="Game.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
   <script src="Menu.js"></script>
-  <script src="Carga.js"></script>
-  <script src="Pausa.js"></script>
+  <script src="Carga.js "></script>
   <script src="Opciones.js"></script>
   <script src="Controles.js"></script>
-  <script src="main.js"></script>
+  <script src="Pausa.js"></script>
+  <script src="Game.js"></script>
+
+  <script>
+    const config = {
+      type: Phaser.AUTO,
+      width: 1280,
+      height: 720,
+      parent: 'game-container',
+      scene: [Menu, Opciones, Controles, Game, Pausa, Carga],
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 400 },
+          debug: false
+        }
+      },
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1280,
+        height: 720
+      },
+      backgroundColor: '#000'
+    };
+
+    const game = new Phaser.Game(config);
+  </script>
 </body>
 </html>
