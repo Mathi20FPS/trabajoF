@@ -34,7 +34,7 @@ class Menu extends Phaser.Scene {
 
     const opcionesX = centerX - 450 + margen;
     const opcionesY = centerY + 250 - margen;
-    const opcionesBtn = this.add.sprite(opcionesX, opcionesY, 'opciones').setInteractive().setScale(1);
+    const opcionesBtn = this.add.sprite(opcionesX, opcionesY, 'opciones').setInteractive().setScale(1.3);
     opcionesBtn.play('idle_opciones');
     opcionesBtn.on('pointerover', () => opcionesBtn.play('hover_opciones'));
     opcionesBtn.on('pointerout', () => opcionesBtn.play('idle_opciones'));

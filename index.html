@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Mi Juego Phaser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
     html, body {
       margin: 0;
@@ -23,6 +24,7 @@
 
     canvas {
       display: block;
+      margin: auto;
     }
   </style>
 </head>
@@ -31,9 +33,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
   <script src="Menu.js"></script>
-  <script src="Carga.js "></script>
+  <script src="Carga.js"></script>
   <script src="Opciones.js"></script>
   <script src="Controles.js"></script>
+  <script src="Controles2.js"></script>
   <script src="Pausa.js"></script>
   <script src="Game.js"></script>
 
@@ -43,7 +46,7 @@
       width: 1280,
       height: 720,
       parent: 'game-container',
-      scene: [Menu, Opciones, Controles, Game, Pausa, Carga],
+      scene: [Menu, Opciones, Controles, Game, Pausa, Carga, Controles2],
       physics: {
         default: 'arcade',
         arcade: {

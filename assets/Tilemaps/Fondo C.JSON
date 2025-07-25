@@ -223,9 +223,31 @@
          "width":40,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"Objetos",
+         "objects":[
+                {
+                 "height":28.6666666666667,
+                 "id":15,
+                 "name":"salir",
+                 "rotation":0,
+                 "type":"puerta",
+                 "visible":true,
+                 "width":414.666666666667,
+                 "x":112.666666666667,
+                 "y":1.33333333333333
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":3,
- "nextobjectid":1,
+ "nextlayerid":5,
+ "nextobjectid":16,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

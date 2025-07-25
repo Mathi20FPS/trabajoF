@@ -6,7 +6,7 @@ class Opciones extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('opcionesUI', 'assets/Interfaz/opciones.png');
+    this.load.image('opcionesUI', 'assets/Interfaz/Pausa3.png');
 
     this.load.spritesheet('musicaBtn', 'assets/Sprite/musica.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('sonidoBtn', 'assets/Sprite/sonido.png', { frameWidth: 32, frameHeight: 32 });
