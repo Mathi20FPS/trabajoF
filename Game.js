@@ -3,209 +3,217 @@ class Game extends Phaser.Scene {
     super('Game');
     this.alturaMaxima = 600;
     this.paused = false;
-    this.puntos = 0;
-    this.metros = 0;
-    this.usaPlataforma2 = false; // 🔸 Cambio importante
+    this.spawnTimers = {
+      pajaro: 0,
+      nave: 0,
+      enemigoE: 0
+    };
   }
 
   preload() {
-    this.load.image('espacio', 'assets/tiles/espacio.png');
-    this.load.image('suelo', 'assets/tiles/suelo.png');
-    this.load.image('pared', 'assets/tiles/pared.png');
     this.load.image('cielo', 'assets/tiles/cielo.jpg');
     this.load.image('plataforma', 'assets/tiles/plataforma.png');
-    this.load.image('plataforma2', 'assets/tiles/plataforma2.png'); // 🔸 Nueva imagen
     this.load.image('fondo', 'assets/tiles/fondo.png');
-    this.load.tilemapTiledJSON('mapaf', 'assets/Tilemaps/mapaf.json');
+    this.load.spritesheet('player', 'assets/sprites/player.png', { frameWidth: 16, frameHeight: 16 });
 
-    this.load.spritesheet('jugador', 'assets/Sprite/Caminar-32x32.png', {
-      frameWidth: 32,
-      frameHeight: 32
-    });
-
-    this.load.image('pausaUI', 'assets/Interfaz/pausa.png');
+    this.load.spritesheet('pajaro', 'assets/sprites/pajaro.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('pajaro2', 'assets/sprites/pajaro2.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('nave', 'assets/sprites/nave.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.image('huevo', 'assets/sprites/huevo.png');
+    this.load.spritesheet('rayo', 'assets/sprites/rayo.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.image('enemigoE', 'assets/sprites/enemigoE.png');
   }
 
   create() {
+    this.add.image(240, 400, 'cielo').setScrollFactor(0);
+    this.player = this.physics.add.sprite(240, 500, 'player');
+    this.player.setCollideWorldBounds(true);
+    this.player.setGravityY(500);
+
     this.plataformas = this.physics.add.staticGroup();
-    this.cargarMapa('mapaf');
+    this.generarPlataformasIniciales();
 
-    this.cursors = this.input.keyboard.createCursorKeys();
+    this.enemigos = this.add.group();
+    this.proyectiles = this.physics.add.group();
 
-    this.pKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    this.pKey.on('down', () => {
-      this.scene.pause('Game');
-      this.scene.launch('Pausa');
+    this.physics.add.collider(this.player, this.plataformas);
+    this.physics.add.overlap(this.player, this.proyectiles, this.morir, null, this);
+    this.physics.add.overlap(this.player, this.enemigos, this.morir, null, this);
+
+    this.cameras.main.startFollow(this.player);
+    this.cameras.main.setLerp(0, 0.1);
+   
+    this.time.addEvent({
+  delay: 8000,
+  loop: true,
+  callback: () => {
+    if (this.metros >= 400) {
+      this.generarEnemigoE();
+    }
+  }
+});
+
+  }
+
+  update(time, delta) {
+    this.moverJugador();
+
+    const alturaJugador = Math.floor(this.player.y * -1 + 600);
+    if (alturaJugador > this.alturaMaxima) {
+      this.alturaMaxima = alturaJugador;
+      this.generarPlataformas();
+    }
+
+    if (alturaJugador >= 100) this.spawnearPajaro(delta);
+    if (alturaJugador >= 300) this.spawnearNave(delta);
+    if (alturaJugador >= 400) this.spawnearEnemigoE();
+
+    this.enemigos.children.iterate(enemigo => {
+      if (enemigo.tipo === 'pajaro') {
+        enemigo.x += enemigo.direccion * 1.5;
+        if (enemigo.x < 0 || enemigo.x > 480) enemigo.direccion *= -1;
+      }
+      if (enemigo.tipo === 'nave' && enemigo.delay > 0) {
+        enemigo.delay -= delta;
+        if (enemigo.delay <= 0) {
+          this.lanzarRayo(enemigo);
+        }
+      }
+      if (enemigo.tipo === 'enemigoE') {
+        if (this.jugadorVisible(enemigo)) {
+          if (!enemigo.disparando) {
+            enemigo.disparando = true;
+            this.time.delayedCall(500, () => {
+              this.lanzarRayo(enemigo);
+              enemigo.disparando = false;
+            });
+          }
+        }
+      }
     });
 
-    this.pausaUI = this.add.image(640, 360, 'pausaUI').setVisible(false).setDepth(10);
-
-    this.metrosText = this.add.text(16, 16, 'Metros: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0);
-    this.puntosText = this.add.text(16, 40, 'Puntos: 0', { fontSize: '20px', fill: '#ffffff' }).setScrollFactor(0);
+    // Verifica si el jugador cae demasiado
+    if (this.player.y > this.alturaMaxima + 400) {
+      this.morir();
+    }
   }
 
-  update() {
-    const body = this.jugador.body;
-    const animActual = this.jugador.anims.getName();
-
-    if (this.cursors.left.isDown) {
-      body.setVelocityX(-160);
-      this.jugador.setFlipX(true);
-      if (animActual !== 'run') this.jugador.anims.play('run');
-    } else if (this.cursors.right.isDown) {
-      body.setVelocityX(160);
-      this.jugador.setFlipX(false);
-      if (animActual !== 'run') this.jugador.anims.play('run');
+  moverJugador() {
+    const cursors = this.input.keyboard.createCursorKeys();
+    if (cursors.left.isDown) {
+      this.player.setVelocityX(-160);
+    } else if (cursors.right.isDown) {
+      this.player.setVelocityX(160);
     } else {
-      body.setVelocityX(0);
-      if (animActual !== 'idle') this.jugador.anims.play('idle');
-    }
-
-    if (this.cursors.up.isDown && body.blocked.down) {
-      body.setVelocityY(-350);
-    }
-
-    const metrosActuales = Math.floor((this.alturaInicial - this.jugador.y) / 10);
-    if (metrosActuales > this.metros) {
-      this.metros = metrosActuales;
-      this.metrosText.setText('Metros: ' + this.metros);
-    }
-
-    // 🔸 Cambio de plataforma al llegar a 300 metros
-    if (this.metros >= 300 && !this.usaPlataforma2) {
-      this.usaPlataforma2 = true;
-    }
-
-    if (this.salirZone && Phaser.Geom.Intersects.RectangleToRectangle(this.jugador.getBounds(), this.salirZone.getBounds())) {
-      this.scene.start('Win');
-    }
-
-    if (this.jugador.y < this.alturaMaxima - 200) {
-      const nuevoMinY = this.alturaMaxima - 400;
-      const nuevoMaxY = this.alturaMaxima - 100;
-      this.generarPlataformas(nuevoMinY, nuevoMaxY, this.map.widthInPixels, this.offsetX);
-      this.alturaMaxima = nuevoMinY;
-    }
-
-    if (this.jugador.y > this.alturaMaxima + 800) {
-      this.scene.restart();
+      this.player.setVelocityX(0);
     }
   }
 
-  generarPlataformas(yMin, yMax, anchoMapa, offsetX = 0) {
-    const margenLateral = 150;
-    const anchoJugable = anchoMapa - 2 * margenLateral;
-    const saltoY = 140;
+  morir() {
+    this.scene.restart();
+  }
 
-    let y = yMax;
-    let lado = Phaser.Math.Between(0, 1);
-
-    while (y > yMin) {
-      const mitad = anchoJugable / 2;
-      let x = lado === 0
-        ? margenLateral + Phaser.Math.Between(50, mitad - 50)
-        : margenLateral + mitad + Phaser.Math.Between(50, mitad - 50);
-
-      const tipo = this.usaPlataforma2 ? 'plataforma2' : 'plataforma'; // 🔸 Usa plataforma2 si ya pasamos los 300m
-      const plataforma = this.plataformas.create(x + offsetX, y, tipo).refreshBody();
-      plataforma.setData('contado', false);
-      y -= saltoY;
-      lado = 1 - lado;
+  generarPlataformasIniciales() {
+    for (let y = 600; y > -400; y -= 100) {
+      this.crearPlataforma(Phaser.Math.Between(50, 430), y);
     }
   }
 
-  cargarMapa(nombreMapa) {
-    if (this.map) {
-      this.layers?.forEach(layer => layer.destroy());
-      this.plataformas?.clear(true, true);
-      if (this.salirZone) this.salirZone.destroy();
+  generarPlataformas() {
+    let y = this.alturaMaxima * -1;
+    for (let i = 0; i < 5; i++) {
+      this.crearPlataforma(Phaser.Math.Between(50, 430), y);
+      y -= 100;
     }
+  }
 
-    const map = this.make.tilemap({ key: nombreMapa });
-    const espacio = map.addTilesetImage('espacio', 'espacio');
-    const fondo = map.addTilesetImage('fondo', 'fondo');
-    const cielo = map.addTilesetImage('cielo', 'cielo');
-    const pared = map.addTilesetImage('pared', 'pared');
-    const suelo = map.addTilesetImage('suelo', 'suelo');
+  crearPlataforma(x, y) {
+    this.plataformas.create(x, y, 'plataforma').refreshBody();
+  }
 
-    const offsetX = (this.scale.width - map.widthInPixels) / 2;
-    this.offsetX = offsetX;
-    const offsetY = 0;
-
-    map.createLayer('Fondo', [espacio, fondo, cielo], offsetX, offsetY);
-    const capaSuelo = map.createLayer('Suelo', [pared, suelo], offsetX, offsetY);
-    capaSuelo.setCollisionByProperty({ colled: true });
-
-    let x0 = offsetX + map.widthInPixels / 2;
-    let y0 = map.heightInPixels - 64;
-
-    const objetosLayer = map.getObjectLayer('Objetos');
-    if (objetosLayer) {
-      const salida = objetosLayer.objects.find(obj => obj.name === 'salir' && obj.class === 'puerta');
-      if (salida) {
-        y0 = salida.y;
-        x0 = offsetX + salida.x;
-
-        this.salirZone = this.add.zone(offsetX + salida.x, salida.y, salida.width, salida.height);
-        this.physics.world.enable(this.salirZone);
-        this.salirZone.body.setAllowGravity(false);
-        this.salirZone.body.setImmovable(true);
-        this.salirZone.setVisible(false);
-      }
-    }
-
-    if (!this.jugador) {
-      this.jugador = this.physics.add.sprite(x0, y0, 'jugador', 0)
-        .setOrigin(0.5, 1)
-        .setBounce(0.1)
-        .setCollideWorldBounds(true);
-      this.jugador.body.setGravityY(15);
-
-      this.anims.create({
-        key: 'run',
-        frames: this.anims.generateFrameNumbers('jugador', { start: 4, end: 9 }),
-        frameRate: 10,
-        repeat: -1
+  spawnearPajaro(delta) {
+    this.spawnTimers.pajaro += delta;
+    if (this.spawnTimers.pajaro >= 7000) {
+      const lado = Phaser.Math.Between(0, 1);
+      const x = lado === 0 ? -20 : 500;
+      const y = this.player.y - 300;
+      const sprite = lado === 0 ? 'pajaro2' : 'pajaro';
+      const pajaro = this.enemigos.create(x, y, sprite);
+      pajaro.tipo = 'pajaro';
+      pajaro.direccion = lado === 0 ? 1 : -1;
+      this.time.addEvent({
+        delay: 1500,
+        callback: () => {
+          const huevo = this.proyectiles.create(pajaro.x, pajaro.y, 'huevo');
+          huevo.setVelocityY(200);
+        },
+        callbackScope: this,
+        loop: true
       });
-
-      this.anims.create({
-        key: 'idle',
-        frames: [{ key: 'jugador', frame: 0 }],
-        frameRate: 10
-      });
-
-      this.jugador.anims.play('idle');
-      this.cameras.main.startFollow(this.jugador);
-    } else {
-      this.jugador.setPosition(x0, y0);
-      this.jugador.setVelocity(0, 0);
+      this.spawnTimers.pajaro = 0;
     }
+  }
 
-    this.alturaInicial = y0;
-    this.cameras.main.setBounds(0, 0, this.scale.width, map.heightInPixels);
-    this.physics.world.setBounds(0, 0, this.scale.width, map.heightInPixels);
+  spawnearNave(delta) {
+    this.spawnTimers.nave += delta;
+    if (this.spawnTimers.nave >= 7000) {
+      const x = Phaser.Math.Between(50, 430);
+      const y = this.player.y - 350;
+      const nave = this.enemigos.create(x, y, 'nave');
+      nave.tipo = 'nave';
+      nave.delay = 500;
+      this.spawnTimers.nave = 0;
+    }
+  }
 
-    this.physics.add.collider(this.jugador, capaSuelo);
+  lanzarRayo(origen) {
+    const rayo = this.proyectiles.create(origen.x, origen.y, 'rayo');
+    rayo.setVelocityY(250);
+  }
 
-    this.physics.add.collider(this.jugador, this.plataformas, (jugador, plataforma) => {
-      if (jugador.body.velocity.y > 0 && jugador.y < plataforma.y) {
-        if (!plataforma.getData('contado')) {
-          plataforma.setData('contado', true);
-          this.puntos += 10;
-          this.puntosText.setText('Puntos: ' + this.puntos);
+  generarEnemigoE() {
+  const plataformasVisibles = this.plataformas.getChildren().filter(plataforma => {
+    return plataforma.y < this.jugador.y - 100 && plataforma.y > this.jugador.y - 500;
+  });
+
+  if (plataformasVisibles.length === 0) return;
+
+  const plataforma = Phaser.Utils.Array.GetRandom(plataformasVisibles);
+  const enemigoE = this.enemigos.create(plataforma.x, plataforma.y - 20, 'enemigoE');
+  enemigoE.body.allowGravity = false;
+  enemigoE.setImmovable(true);
+  enemigoE.tipo = 'enemigoE';
+  enemigoE.disparando = false;
+
+  this.time.addEvent({
+    delay: 1000,
+    loop: true,
+    callback: () => {
+      if (!enemigoE.active || !this.jugador.active) return;
+      if (this.jugadorVisibleDesde(enemigoE)) {
+        if (!enemigoE.disparando) {
+          enemigoE.disparando = true;
+          this.lanzarRayo(enemigoE.x, enemigoE.y + 10);
+          this.time.delayedCall(1000, () => enemigoE.disparando = false);
         }
-        return true;
       }
-      return false;
-    }, null, this);
-
-    this.map = map;
-    this.alturaMaxima = y0;
-
-    const plataformaInicial = this.plataformas.create(x0, y0 + 4, 'plataforma').refreshBody();
-    plataformaInicial.setData('contado', true);
-    this.generarPlataformas(0, y0 - 100, map.widthInPixels, offsetX);
-  }
+    }
+  });
 }
 
-window.Game = Game;
+
+  jugadorVisible(enemigo) {
+    const jugador = this.player;
+    const x1 = Math.min(enemigo.x, jugador.x);
+    const x2 = Math.max(enemigo.x, jugador.x);
+    const y1 = Math.min(enemigo.y, jugador.y);
+    const y2 = Math.max(enemigo.y, jugador.y);
+
+    const bloqueando = this.plataformas.getChildren().some(plataforma => {
+      return plataforma.x >= x1 && plataforma.x <= x2 &&
+             plataforma.y >= y1 && plataforma.y <= y2;
+    });
+
+    return !bloqueando;
+  }
+}

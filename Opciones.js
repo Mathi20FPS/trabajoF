@@ -18,25 +18,27 @@ class Opciones extends Phaser.Scene {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
 
+    // Fondo semitransparente
     this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.6).setOrigin(0);
-    this.add.image(centerX, centerY, 'opcionesUI').setDisplaySize(900, 500).setOrigin(0.5);
 
-    // Animaciones para los estados
-    this.anims.create({ key: 'idle_musica', frames: [{ key: 'musicaBtn', frame: 1 }], frameRate: 10 });
-    this.anims.create({ key: 'activo_musica', frames: [{ key: 'musicaBtn', frame: 3 }], frameRate: 10 });
-    
-    this.anims.create({ key: 'idle_sonido', frames: [{ key: 'sonidoBtn', frame: 1 }], frameRate: 10 });
-    this.anims.create({ key: 'activo_sonido', frames: [{ key: 'sonidoBtn', frame:3 }], frameRate: 10 });
+    // Imagen central del panel de opciones
+    const fondoUI = this.add.image(centerX, centerY, 'opcionesUI').setDisplaySize(700, 600).setOrigin(0.5);
 
-    this.anims.create({ key: 'idle_controles', frames: [{ key: 'controlesBtn', frame: 1 }], frameRate: 10 });
-    this.anims.create({ key: 'hover_controles', frames: [{ key: 'controlesBtn', frame:3 }], frameRate: 10 });
+    // Animaciones
+    this.anims.create({ key: 'idle_musica', frames: [{ key: 'musicaBtn', frame: 1 }] });
+    this.anims.create({ key: 'activo_musica', frames: [{ key: 'musicaBtn', frame: 3 }] });
 
-    this.anims.create({ key: 'idle_salir', frames: [{ key: 'salirBtn', frame: 1 }], frameRate: 10 });
-    this.anims.create({ key: 'hover_salir', frames: [{ key: 'salirBtn', frame: 3 }], frameRate: 10 });
+    this.anims.create({ key: 'idle_sonido', frames: [{ key: 'sonidoBtn', frame: 1 }] });
+    this.anims.create({ key: 'activo_sonido', frames: [{ key: 'sonidoBtn', frame: 3 }] });
 
-    // Botones sin animaciones hover, solo toggle click
+    this.anims.create({ key: 'idle_controles', frames: [{ key: 'controlesBtn', frame: 1 }] });
+    this.anims.create({ key: 'hover_controles', frames: [{ key: 'controlesBtn', frame: 3 }] });
 
-    const musicaBtn = this.add.sprite(centerX - 90, centerY + 100, 'musicaBtn').setInteractive().setScale(1.5);
+    this.anims.create({ key: 'idle_salir', frames: [{ key: 'salirBtn', frame: 1 }] });
+    this.anims.create({ key: 'hover_salir', frames: [{ key: 'salirBtn', frame: 3 }] });
+
+    // Botón de música
+    const musicaBtn = this.add.sprite(centerX - 100, centerY + 30, 'musicaBtn').setInteractive().setScale(1.5);
     musicaBtn.play('activo_musica');
     musicaBtn.on('pointerdown', () => {
       this.musicaActiva = !this.musicaActiva;
@@ -44,7 +46,8 @@ class Opciones extends Phaser.Scene {
       console.log(`Música ${this.musicaActiva ? 'activada' : 'desactivada'}`);
     });
 
-    const sonidoBtn = this.add.sprite(centerX + 100, centerY + 100, 'sonidoBtn').setInteractive().setScale(1.5);
+    // Botón de sonido
+    const sonidoBtn = this.add.sprite(centerX + 100, centerY + 30, 'sonidoBtn').setInteractive().setScale(1.5);
     sonidoBtn.play('activo_sonido');
     sonidoBtn.on('pointerdown', () => {
       this.sonidoActivo = !this.sonidoActivo;
@@ -52,9 +55,8 @@ class Opciones extends Phaser.Scene {
       console.log(`Sonido ${this.sonidoActivo ? 'activado' : 'desactivado'}`);
     });
 
-    // Para controles y salir, si querés podés mantener animaciones hover
-
-    const controlesBtn = this.add.sprite(centerX, centerY - 50, 'controlesBtn').setInteractive().setScale(1.5);
+    // Botón de controles
+    const controlesBtn = this.add.sprite(centerX, centerY - 60, 'controlesBtn').setInteractive().setScale(1.5);
     controlesBtn.play('idle_controles');
     controlesBtn.on('pointerover', () => controlesBtn.play('hover_controles'));
     controlesBtn.on('pointerout', () => controlesBtn.play('idle_controles'));
@@ -62,7 +64,8 @@ class Opciones extends Phaser.Scene {
       this.scene.start('Controles', { desde: 'Opciones' });
     });
 
-    const salirBtn = this.add.sprite(centerX + 169, centerY - 180, 'salirBtn').setInteractive().setScale(2.5);
+    // Botón de salir en la ESQUINA SUPERIOR DERECHA del panel
+    const salirBtn = this.add.sprite(centerX + 420, centerY - 230, 'salirBtn').setInteractive().setScale(2.5);
     salirBtn.play('idle_salir');
     salirBtn.on('pointerover', () => salirBtn.play('hover_salir'));
     salirBtn.on('pointerout', () => salirBtn.play('idle_salir'));
@@ -70,6 +73,7 @@ class Opciones extends Phaser.Scene {
       this.scene.start('Menu');
     });
 
+    // Salir también con ESC
     this.input.keyboard.on('keydown-ESC', () => {
       this.scene.start('Menu');
     });
