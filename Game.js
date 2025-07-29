@@ -14,14 +14,14 @@ class Game extends Phaser.Scene {
     this.load.image('cielo', 'assets/tiles/cielo.jpg');
     this.load.image('plataforma', 'assets/tiles/plataforma.png');
     this.load.image('fondo', 'assets/tiles/fondo.png');
-    this.load.spritesheet('player', 'assets/sprites/player.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('player', 'assets/Sprite/caminar-32x32.png', { frameWidth: 32, frameHeight: 32 });
 
-    this.load.spritesheet('pajaro', 'assets/sprites/pajaro.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('pajaro2', 'assets/sprites/pajaro2.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('nave', 'assets/sprites/nave.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.image('huevo', 'assets/sprites/huevo.png');
-    this.load.spritesheet('rayo', 'assets/sprites/rayo.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.image('enemigoE', 'assets/sprites/enemigoE.png');
+    this.load.spritesheet('pajaro', 'assets/Sprite/pajaro.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('pajaro2', 'assets/Sprite/pajaro2.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('nave', 'assets/Sprite/nave.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.image('huevo', 'assets/Sprite/huevo.png');
+    this.load.spritesheet('rayo', 'assets/Sprite/rayo.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.image('enemigoE', 'assets/Sprite/enemigoE.png');
   }
 
   create() {
