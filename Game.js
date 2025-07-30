@@ -16,7 +16,7 @@ class Game extends Phaser.Scene {
     this.load.spritesheet('pajaro2', 'assets/Sprite/pajaro2.png', { frameWidth: 32, frameHeight: 32 });
     this.load.image('huevo', 'assets/Sprite/huevo.png');
     this.load.spritesheet('nave', 'assets/Sprite/nave.png', { frameWidth: 16, frameHeight: 16 });
-    this.load.spritesheet('rayo', 'assets/Sprite/rayo.png', { frameWidth: 48, frameHeight: 3 });
+    this.load.spritesheet('rayo', 'assets/Sprite/rayo.png', { frameWidth: 2, frameHeight: 40 });
     this.load.spritesheet('enemigoE', 'assets/Sprite/enemigoE.png', { frameWidth: 16, frameHeight: 16 });
   }
 

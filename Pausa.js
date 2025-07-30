@@ -59,10 +59,10 @@ class Pausa extends Phaser.Scene {
 
     // Posiciones relativas a menú (proporción según tamaño original 900x500)
     const relativePositions = {
-      musicaBtn: { x: centerX - (90 / 900) * menuWidth, y: centerY + (100 / 500) * menuHeight },
-      sonidoBtn: { x: centerX + (100 / 900) * menuWidth, y: centerY + (100 / 500) * menuHeight },
+      musicaBtn: { x: centerX - (90 / 900) * menuWidth, y: centerY + (100 / 800) * menuHeight },
+      sonidoBtn: { x: centerX + (100 / 900) * menuWidth, y: centerY + (100 / 800) * menuHeight },
       controlesBtn: { x: centerX, y: centerY - (50 / 500) * menuHeight },
-      salirBtn: { x: centerX + (169 / 900) * menuWidth, y: centerY - (180 / 500) * menuHeight }
+      salirBtn: { x: centerX + (120 / 500) * menuWidth, y: centerY - (180 / 800) * menuHeight }
     };
 
     // Crear botones con posiciones ajustadas y escalas fijas (puedes ajustar escalas si querés)
